@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t poger90/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run poger90/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t poger90/multi-client ./client
+  - docker build -t poger90/multi-nginx ./nginx
+  - docker build -t poger90/multi-server ./server
+  - docker build -t poger90/multi-woker ./worker
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push poger90/multi-client
+  - docker push poger90/multi-nginx
+  - docker push poger90/multi-server
+  - docker push poger90/multi-worker
